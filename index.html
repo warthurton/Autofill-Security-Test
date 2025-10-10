@@ -2,327 +2,81 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Safe Enterprise Website</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RDM Autofill Security Test</title>
     <style>
-        * {
+        body {
+            background: #f4f8fb;
+            font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            color: #222;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            padding: 20px;
-            background: #f5f5f5;
-            line-height: 1.6;
+        header {
+            background: #2d5fa4;
+            color: #fff;
+            padding: 2rem 0 1rem 0;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(45,95,164,0.08);
         }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
         }
-        
         h1 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        
-        .status {
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            font-size: 16px;
-            font-weight: 500;
-        }
-        
-        .waiting {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            color: #856404;
-        }
-        
-        .secure {
-            background: #d4edda;
-            border: 2px solid #28a745;
-            color: #155724;
-        }
-        
-        .insecure {
-            background: #f8d7da;
-            border: 2px solid #dc3545;
-            color: #721c24;
-        }
-        
-        .instructions {
-            background: #e7f3ff;
-            padding: 15px;
-            border-left: 4px solid #2196F3;
-            margin: 20px 0;
-        }
-        
-        .instructions ol {
-            margin-left: 20px;
-            margin-top: 10px;
-        }
-        
-        .instructions li {
-            margin: 5px 0;
-        }
-        
-        .data-display {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 15px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .data-display pre {
             margin: 0;
-            white-space: pre-wrap;
-            word-wrap: break-word;
+            font-size: 2.5rem;
+            letter-spacing: 1px;
         }
-        
-        .timestamp {
-            color: #666;
-            font-size: 12px;
-            margin-top: 10px;
+        p {
+            font-size: 1.2rem;
+            margin: 1.5rem 0 2.5rem 0;
+            color: #3a4a5d;
         }
-        
-        .event-log {
-            margin-top: 30px;
+        .login-link {
+            display: inline-block;
+            background: #2d5fa4;
+            color: #fff;
+            text-decoration: none;
+            padding: 0.9rem 2.2rem;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(45,95,164,0.08);
+            transition: background 0.2s, box-shadow 0.2s;
         }
-        
-        .event-log h2 {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #333;
+        .login-link:hover, .login-link:focus {
+            background: #1c3e6e;
+            box-shadow: 0 4px 16px rgba(45,95,164,0.12);
         }
-        
-        .log-entry {
-            padding: 10px;
-            margin: 5px 0;
-            background: #f8f9fa;
-            border-left: 3px solid #2196F3;
-            font-size: 14px;
-        }
-        
-        .warning {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        
-        .warning strong {
-            color: #856404;
-        }
-        
-        code {
-            background: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .test-form {
-            margin: 20px 0;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 5px;
-        }
-        
-        .test-form input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .test-form button {
-            background: #2196F3;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .test-form button:hover {
-            background: #1976D2;
+        footer {
+            text-align: center;
+            padding: 1rem 0;
+            background: #e9eef3;
+            color: #6a7b8c;
+            font-size: 0.95rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔒 RDM Autofill Security Test</h1>
-        
-        <div class="instructions">
-            <strong>Instructions:</strong>
-            <ol>
-                <li>Open this page in RDM's WebView2</li>
-                <li>Configure RDM to autofill the form below</li>
-                <li>Trigger the autofill</li>
-                <li>Check the results below</li>
-            </ol>
-        </div>
-        
-        <div id="status" class="status waiting">
-            ⏳ Waiting for RDM autofill event...
-        </div>
-        
-        <div class="test-form">
-            <h3>Test Login Form</h3>
-            <input type="text" id="username" name="username" placeholder="Username" class="TextBox2">
-            <input type="password" id="password" name="password" placeholder="Password" class="PasswordBox2">
-            <button type="button" onclick="alert('Form would submit here')">Login</button>
-        </div>
-        
-        <div id="results" style="display: none;">
-            <h2>🚨 Event Intercepted!</h2>
-            <div class="warning">
-                <strong>⚠️ SECURITY ISSUE DETECTED:</strong><br>
-                This webpage's JavaScript can see the autofill credentials!<br>
-                This means malicious websites could steal your passwords.
-            </div>
-            
-            <h3>Intercepted Data:</h3>
-            <div class="data-display" id="dataDisplay"></div>
-            
-            <div class="timestamp" id="timestamp"></div>
-        </div>
-        
-        <div class="event-log">
-            <h2>Event Log:</h2>
-            <div id="eventLog"></div>
-        </div>
-    </div>
-    
-    <script>
-        const statusEl = document.getElementById('status');
-        const resultsEl = document.getElementById('results');
-        const dataDisplayEl = document.getElementById('dataDisplay');
-        const timestampEl = document.getElementById('timestamp');
-        const eventLogEl = document.getElementById('eventLog');
-        
-        let eventCount = 0;
-        let startTime = Date.now();
-        
-        function addLog(message, type = 'info') {
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            const time = new Date().toLocaleTimeString();
-            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-            entry.textContent = `[${time}] [+${elapsed}s] ${message}`;
-            eventLogEl.insertBefore(entry, eventLogEl.firstChild);
-        }
-        
-        addLog('Page loaded - monitoring for rdmWebView2CustomMessage events');
-        
-        // Try to intercept the RDM autofill event
-        document.addEventListener("rdmWebView2CustomMessage", function(event) {
-            eventCount++;
-            addLog(`🚨 Event intercepted! (Count: ${eventCount})`);
-            
-            // Update status
-            statusEl.className = 'status insecure';
-            statusEl.innerHTML = '❌ <strong>INSECURE:</strong> Website JavaScript CAN intercept credentials!';
-            
-            // Show results
-            resultsEl.style.display = 'block';
-            
-            // Display the intercepted data
-            if (event.detail && event.detail.data) {
-                const data = event.detail.data;
-                
-                // Create a sanitized display
-                const displayData = {
-                    username: data.username || '(not provided)',
-                    password: data.password ? '***INTERCEPTED***' : '(not provided)',
-                    usernameId: data.usernameId,
-                    passwordId: data.passwordId,
-                    formId: data.formId,
-                    autoSubmit: data.autoSubmit,
-                    checkPasswordInput: data.checkPasswordInput,
-                    domainId: data.domainId,
-                    otpId: data.otpId,
-                    otp: data.otp ? '***INTERCEPTED***' : undefined,
-                    customFields: data.customAutoFillHtmlItemData ? data.customAutoFillHtmlItemData.length + ' field(s)' : 0
-                };
-                
-                // Show sensitive data was present
-                let sensitiveData = [];
-                if (data.username) sensitiveData.push('Username');
-                if (data.password) sensitiveData.push('Password (PLAINTEXT!)');
-                if (data.otp) sensitiveData.push('OTP/2FA Code');
-                
-                dataDisplayEl.innerHTML = `
-                    <strong style="color: #dc3545;">Sensitive data accessible:</strong><br>
-                    ${sensitiveData.map(s => '• ' + s).join('<br>')}<br><br>
-                    <strong>Event Data Structure:</strong><br>
-                    <pre>${JSON.stringify(displayData, null, 2)}</pre>
-                    <br>
-                    <strong style="color: #dc3545;">⚠️ The actual password is visible in plaintext to this JavaScript!</strong>
-                `;
-                
-                timestampEl.textContent = `Intercepted at: ${new Date().toLocaleTimeString()}`;
-                
-                addLog(`Data keys: ${Object.keys(data).join(', ')}`);
-                addLog(`Sensitive fields present: ${sensitiveData.join(', ')}`);
-                
-                // Check if data persists
-                let checkCount = 0;
-                const persistCheck = setInterval(() => {
-                    checkCount++;
-                    if (checkCount > 30) {
-                        clearInterval(persistCheck);
-                        addLog('Stopped checking after 30 seconds');
-                        return;
-                    }
-                    
-                    if (event.detail && event.detail.data) {
-                        if (checkCount === 10) {
-                            addLog(`⏱️ Data still accessible after ${checkCount} seconds`);
-                        } else if (checkCount === 20) {
-                            addLog(`⏱️ Data still accessible after ${checkCount} seconds`);
-                        } else if (checkCount === 30) {
-                            addLog(`⏱️ Data still accessible after ${checkCount} seconds`);
-                        }
-                    } else {
-                        addLog(`🗑️ Data cleared after ${checkCount} seconds`);
-                        clearInterval(persistCheck);
-                    }
-                }, 1000);
-            } else {
-                dataDisplayEl.innerHTML = '<pre>Event received but no data found</pre>';
-                addLog('Event received but event.detail.data was empty');
-            }
-        }, true); // Use capture phase
-        
-        // Check after 5 seconds if nothing happened
-        setTimeout(() => {
-            if (eventCount === 0) {
-                statusEl.className = 'status secure';
-                statusEl.innerHTML = '✅ <strong>SECURE:</strong> No events intercepted yet (or RDM uses isolated world)';
-                addLog('No events detected after 5 seconds');
-            }
-        }, 5000);
-        
-        addLog('Event listener attached - ready to intercept');
-    </script>
+    <header>
+        <h1>Safe Enterprise Website</h1>
+    </header>
+    <main>
+        <p>Welcome to the Safe Enterprise Website. Your security is our top priority.</p>
+        <a class="login-link" href="fake-login/" target="_blank" rel="noopener noreferrer">
+            Go to Login
+        </a>
+    </main>
+    <footer>
+        &copy; 2024 Safe Enterprise. All rights reserved.
+    </footer>
 </body>
 </html>
