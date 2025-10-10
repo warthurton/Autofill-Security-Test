@@ -313,14 +313,14 @@
             }
         }, true); // Use capture phase
         
-        // Check after 5 seconds if nothing happened
+        // Check after 30 seconds if nothing happened
         setTimeout(() => {
             if (eventCount === 0) {
                 statusEl.className = 'status secure';
                 statusEl.innerHTML = '✅ <strong>SECURE:</strong> No events intercepted yet (or RDM uses isolated world)';
-                addLog('No events detected after 5 seconds');
+                addLog('No events detected after 30 seconds');
             }
-        }, 5000);
+        }, 30000);
         
         addLog('Event listener attached - ready to intercept');
     </script>
