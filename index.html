@@ -30,31 +30,40 @@
             justify-content: center;
             padding: 2rem;
         }
-        h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            letter-spacing: 1px;
+        .helpdesk-interface {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
         }
-        p {
-            font-size: 1.2rem;
-            margin: 1.5rem 0 2.5rem 0;
-            color: #3a4a5d;
+        .helpdesk-interface h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
         }
-        .login-link {
-            display: inline-block;
-            background: #2d5fa4;
-            color: #fff;
+        .ticket-info {
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            color: #555;
+        }
+        .user-note {
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 1rem;
+            font-size: 1rem;
+            color: #555;
+        }
+        .user-note a {
+            color: #007BFF;
             text-decoration: none;
-            padding: 0.9rem 2.2rem;
-            border-radius: 6px;
-            font-size: 1.1rem;
-            font-weight: 500;
-            box-shadow: 0 2px 8px rgba(45,95,164,0.08);
-            transition: background 0.2s, box-shadow 0.2s;
         }
-        .login-link:hover, .login-link:focus {
-            background: #1c3e6e;
-            box-shadow: 0 4px 16px rgba(45,95,164,0.12);
+        .user-note a:hover {
+            text-decoration: underline;
         }
         footer {
             text-align: center;
@@ -70,10 +79,17 @@
         <h1>Safe Enterprise Website</h1>
     </header>
     <main>
-        <p>Welcome to the Safe Enterprise Website. Your security is our top priority.</p>
-        <a class="login-link" href="fake-login/" target="_blank" rel="noopener noreferrer">
-            Go to Login
-        </a>
+        <div class="helpdesk-interface">
+            <h2>Helpdesk Tool</h2>
+            <div class="ticket-info">
+                <p><strong>Ticket Number:</strong> #12345</p>
+                <p><strong>Assigned User:</strong> John Doe</p>
+                <p><strong>Status:</strong> Open</p>
+            </div>
+            <p class="user-note">
+                User Note: Please review the following link for more details: <a href="fake-login/" target="_blank" rel="noopener noreferrer">Fake Login Page</a>
+            </p>
+        </div>
     </main>
     <footer>
         &copy; 2024 Safe Enterprise. All rights reserved.
