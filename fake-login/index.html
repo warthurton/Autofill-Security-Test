@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RDM Autofill Security Test</title>
+    <title>RDM Autofill Security Test - Comprehensive</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
         
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             padding: 30px;
@@ -30,7 +30,21 @@
         h1 {
             color: #333;
             margin-bottom: 20px;
-            font-size: 24px;
+            font-size: 28px;
+        }
+        
+        h2 {
+            color: #444;
+            margin: 25px 0 15px 0;
+            font-size: 20px;
+            border-bottom: 2px solid #2196F3;
+            padding-bottom: 8px;
+        }
+        
+        h3 {
+            color: #555;
+            margin: 15px 0 10px 0;
+            font-size: 16px;
         }
         
         .status {
@@ -103,18 +117,28 @@
             margin-top: 30px;
         }
         
-        .event-log h2 {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        
         .log-entry {
             padding: 10px;
             margin: 5px 0;
             background: #f8f9fa;
             border-left: 3px solid #2196F3;
-            font-size: 14px;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .log-entry.critical {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .log-entry.warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        
+        .log-entry.success {
+            background: #d4edda;
+            border-left-color: #28a745;
         }
         
         .warning {
@@ -127,6 +151,18 @@
         
         .warning strong {
             color: #856404;
+        }
+        
+        .critical {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .critical strong {
+            color: #721c24;
         }
         
         code {
@@ -160,90 +196,283 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
+            margin-right: 10px;
         }
         
         .test-form button:hover {
             background: #1976D2;
         }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .test-result {
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        
+        .test-result.pass {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        
+        .test-result.fail {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        
+        .test-result strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .summary-card {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .summary-card h3 {
+            font-size: 32px;
+            margin: 10px 0;
+        }
+        
+        .summary-card.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .summary-card.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔒 RDM Autofill Security Test</h1>
+        <h1>🔒 RDM Autofill Security Test - Comprehensive Suite</h1>
         
         <div class="instructions">
             <strong>Instructions:</strong>
             <ol>
                 <li>Open this page in RDM's WebView2</li>
                 <li>Configure RDM to autofill the form below</li>
-                <li>Trigger the autofill</li>
-                <li>Check the results below</li>
+                <li>Trigger the autofill operation</li>
+                <li>Review all test results below</li>
+                <li><strong>GREEN = SECURE</strong> (Website cannot detect injection)</li>
+                <li><strong>RED = INSECURE</strong> (Website can detect/intercept credentials)</li>
             </ol>
         </div>
         
-        <div id="status" class="status waiting">
-            ⏳ Waiting for RDM autofill event...
+        <!-- Summary Cards -->
+        <div class="summary">
+            <div class="summary-card" id="summaryRDM">
+                <div>RDM Event Test</div>
+                <h3 id="rdmCount">-</h3>
+                <div id="rdmStatus">Waiting...</div>
+            </div>
+            <div class="summary-card" id="summaryGeneral">
+                <div>General Tests</div>
+                <h3 id="generalCount">-</h3>
+                <div id="generalStatus">Waiting...</div>
+            </div>
         </div>
         
+        <!-- Test Form -->
         <div class="test-form">
             <h3>Test Login Form</h3>
-            <input type="text" id="username" name="username" placeholder="Username" class="TextBox2">
-            <input type="password" id="password" name="password" placeholder="Password" class="PasswordBox2">
+            <input type="text" id="username" name="username" placeholder="Username" autocomplete="username" class="TextBox2">
+            <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password" class="PasswordBox2">
+            <input type="email" id="email" name="email" placeholder="Email" autocomplete="email">
             <button type="button" onclick="alert('Form would submit here')">Login</button>
+            <button type="button" onclick="runAllGeneralTests()">Re-run Detection Tests</button>
         </div>
         
-        <div id="results" style="display: none;">
-            <h2>🚨 Event Intercepted!</h2>
-            <div class="warning">
-                <strong>⚠️ SECURITY ISSUE DETECTED:</strong><br>
-                This webpage's JavaScript can see the autofill credentials!<br>
-                This means malicious websites could steal your passwords.
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('rdm')">RDM Event Interception</button>
+            <button class="tab" onclick="switchTab('general')">General Detection Tests</button>
+            <button class="tab" onclick="switchTab('log')">Event Log</button>
+        </div>
+        
+        <!-- RDM-Specific Test Results -->
+        <div id="tab-rdm" class="tab-content active">
+            <h2>🎯 RDM Event Interception Test</h2>
+            
+            <div id="rdmStatus2" class="status waiting">
+                ⏳ Waiting for RDM autofill event (<code>rdmWebView2CustomMessage</code>)...
             </div>
             
-            <h3>Intercepted Data:</h3>
-            <div class="data-display" id="dataDisplay"></div>
-            
-            <div class="timestamp" id="timestamp"></div>
+            <div id="rdmResults" style="display: none;">
+                <div class="critical">
+                    <strong>🚨 CRITICAL SECURITY ISSUE DETECTED:</strong><br>
+                    This webpage's JavaScript can intercept the <code>rdmWebView2CustomMessage</code> event!<br>
+                    This means malicious websites could steal your passwords in plaintext.
+                </div>
+                
+                <h3>Intercepted Data:</h3>
+                <div class="data-display" id="rdmDataDisplay"></div>
+                
+                <div class="timestamp" id="rdmTimestamp"></div>
+                
+                <h3>Security Implications:</h3>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>✗ Website JavaScript has access to credentials</li>
+                    <li>✗ Passwords are transmitted in plaintext via DOM events</li>
+                    <li>✗ Malicious scripts can log all autofilled credentials</li>
+                    <li>✗ No isolation between RDM and website JavaScript</li>
+                </ul>
+            </div>
         </div>
         
-        <div class="event-log">
-            <h2>Event Log:</h2>
+        <!-- General Detection Test Results -->
+        <div id="tab-general" class="tab-content">
+            <h2>🔍 General JavaScript Injection Detection</h2>
+            <p style="margin-bottom: 15px;">
+                These tests check if injected JavaScript is visible to the website. 
+                <strong>Secure implementations should pass all tests (GREEN).</strong>
+            </p>
+            <div id="generalResults"></div>
+        </div>
+        
+        <!-- Event Log -->
+        <div id="tab-log" class="tab-content">
+            <h2>📋 Event Log</h2>
+            <button onclick="clearEventLog()" style="margin-bottom: 10px; padding: 8px 15px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Clear Log</button>
             <div id="eventLog"></div>
         </div>
     </div>
     
     <script>
-        const statusEl = document.getElementById('status');
-        const resultsEl = document.getElementById('results');
-        const dataDisplayEl = document.getElementById('dataDisplay');
-        const timestampEl = document.getElementById('timestamp');
-        const eventLogEl = document.getElementById('eventLog');
+        // ============================================================
+        // SHARED UTILITIES
+        // ============================================================
         
         let eventCount = 0;
+        let rdmEventCount = 0;
+        let generalFailCount = 0;
+        let generalPassCount = 0;
         let startTime = Date.now();
         
         function addLog(message, type = 'info') {
             const entry = document.createElement('div');
-            entry.className = 'log-entry';
+            entry.className = `log-entry ${type}`;
             const time = new Date().toLocaleTimeString();
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
             entry.textContent = `[${time}] [+${elapsed}s] ${message}`;
-            eventLogEl.insertBefore(entry, eventLogEl.firstChild);
+            document.getElementById('eventLog').insertBefore(entry, document.getElementById('eventLog').firstChild);
         }
         
-        addLog('Page loaded - monitoring for rdmWebView2CustomMessage events');
+        function clearEventLog() {
+            document.getElementById('eventLog').innerHTML = '';
+            addLog('Event log cleared', 'info');
+        }
         
-        // Try to intercept the RDM autofill event
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+        
+        function updateSummary() {
+            // Update RDM summary
+            const rdmCard = document.getElementById('summaryRDM');
+            document.getElementById('rdmCount').textContent = rdmEventCount;
+            if (rdmEventCount > 0) {
+                document.getElementById('rdmStatus').textContent = 'INSECURE';
+                rdmCard.classList.remove('pass');
+                rdmCard.classList.add('fail');
+            } else {
+                document.getElementById('rdmStatus').textContent = 'Secure';
+                rdmCard.classList.remove('fail');
+                rdmCard.classList.add('pass');
+            }
+            
+            // Update General summary
+            const generalCard = document.getElementById('summaryGeneral');
+            const totalGeneral = generalFailCount + generalPassCount;
+            if (totalGeneral > 0) {
+                document.getElementById('generalCount').textContent = `${generalPassCount}/${totalGeneral}`;
+                document.getElementById('generalStatus').textContent = generalFailCount === 0 ? 'All Passed' : `${generalFailCount} Failed`;
+                if (generalFailCount === 0) {
+                    generalCard.classList.remove('fail');
+                    generalCard.classList.add('pass');
+                } else {
+                    generalCard.classList.remove('pass');
+                    generalCard.classList.add('fail');
+                }
+            }
+        }
+        
+        // ============================================================
+        // RDM-SPECIFIC EVENT INTERCEPTION TEST
+        // ============================================================
+        
+        addLog('🔒 RDM Security Test initialized', 'info');
+        addLog('Monitoring for rdmWebView2CustomMessage events...', 'info');
+        
+        // Intercept the RDM autofill event
         document.addEventListener("rdmWebView2CustomMessage", function(event) {
+            rdmEventCount++;
             eventCount++;
-            addLog(`🚨 Event intercepted! (Count: ${eventCount})`);
+            addLog(`🚨 CRITICAL: rdmWebView2CustomMessage event intercepted! (Count: ${rdmEventCount})`, 'critical');
             
             // Update status
+            const statusEl = document.getElementById('rdmStatus2');
             statusEl.className = 'status insecure';
-            statusEl.innerHTML = '❌ <strong>INSECURE:</strong> Website JavaScript CAN intercept credentials!';
+            statusEl.innerHTML = '❌ <strong>INSECURE:</strong> Website JavaScript CAN intercept rdmWebView2CustomMessage events!';
             
             // Show results
-            resultsEl.style.display = 'block';
+            document.getElementById('rdmResults').style.display = 'block';
             
             // Display the intercepted data
             if (event.detail && event.detail.data) {
@@ -270,19 +499,20 @@
                 if (data.password) sensitiveData.push('Password (PLAINTEXT!)');
                 if (data.otp) sensitiveData.push('OTP/2FA Code');
                 
-                dataDisplayEl.innerHTML = `
-                    <strong style="color: #dc3545;">Sensitive data accessible:</strong><br>
+                document.getElementById('rdmDataDisplay').innerHTML = `
+                    <strong style="color: #dc3545;">Sensitive data accessible to website:</strong><br>
                     ${sensitiveData.map(s => '• ' + s).join('<br>')}<br><br>
                     <strong>Event Data Structure:</strong><br>
                     <pre>${JSON.stringify(displayData, null, 2)}</pre>
                     <br>
-                    <strong style="color: #dc3545;">⚠️ The actual password is visible in plaintext to this JavaScript!</strong>
+                    <strong style="color: #dc3545;">⚠️ The actual password is visible in plaintext to this JavaScript!</strong><br>
+                    <strong style="color: #dc3545;">⚠️ Any malicious script on this page can steal these credentials!</strong>
                 `;
                 
-                timestampEl.textContent = `Intercepted at: ${new Date().toLocaleTimeString()}`;
+                document.getElementById('rdmTimestamp').textContent = `Intercepted at: ${new Date().toLocaleTimeString()}`;
                 
-                addLog(`Data keys: ${Object.keys(data).join(', ')}`);
-                addLog(`Sensitive fields present: ${sensitiveData.join(', ')}`);
+                addLog(`Data keys available: ${Object.keys(data).join(', ')}`, 'critical');
+                addLog(`Sensitive fields detected: ${sensitiveData.join(', ')}`, 'critical');
                 
                 // Check if data persists
                 let checkCount = 0;
@@ -290,39 +520,401 @@
                     checkCount++;
                     if (checkCount > 30) {
                         clearInterval(persistCheck);
-                        addLog('Stopped checking after 30 seconds');
+                        addLog('Persistence check completed after 30 seconds', 'info');
                         return;
                     }
                     
                     if (event.detail && event.detail.data) {
-                        if (checkCount === 10) {
-                            addLog(`⏱️ Data still accessible after ${checkCount} seconds`);
-                        } else if (checkCount === 20) {
-                            addLog(`⏱️ Data still accessible after ${checkCount} seconds`);
-                        } else if (checkCount === 30) {
-                            addLog(`⏱️ Data still accessible after ${checkCount} seconds`);
+                        if (checkCount % 10 === 0) {
+                            addLog(`⏱️ Credentials still accessible after ${checkCount} seconds`, 'warning');
                         }
                     } else {
-                        addLog(`🗑️ Data cleared after ${checkCount} seconds`);
+                        addLog(`🗑️ Credentials cleared after ${checkCount} seconds`, 'success');
                         clearInterval(persistCheck);
                     }
                 }, 1000);
             } else {
-                dataDisplayEl.innerHTML = '<pre>Event received but no data found</pre>';
-                addLog('Event received but event.detail.data was empty');
+                document.getElementById('rdmDataDisplay').innerHTML = '<pre>Event received but no data found</pre>';
+                addLog('Event received but event.detail.data was empty', 'warning');
             }
+            
+            updateSummary();
         }, true); // Use capture phase
         
-        // Check after 30 seconds if nothing happened
+        // ============================================================
+        // GENERAL JAVASCRIPT INJECTION DETECTION TESTS
+        // ============================================================
+        
+        function addTestResult(testName, passed, details) {
+            if (passed) {
+                generalPassCount++;
+            } else {
+                generalFailCount++;
+            }
+            
+            const resultsDiv = document.getElementById('generalResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            resultDiv.innerHTML = `
+                <strong>${passed ? '✅' : '❌'} ${testName}</strong>
+                <div>${details}</div>
+            `;
+            resultsDiv.appendChild(resultDiv);
+            
+            updateSummary();
+        }
+        
+        // TEST 1: Global Variables
+        function testGlobalVariables() {
+            addLog('Running: Global Variable Detection', 'info');
+            
+            const suspiciousNames = [
+                'fillForm', 'autoFill', 'injectCredentials', 'rdmFill',
+                'passwordManager', 'autofillHandler', 'credentialInjector',
+                '__injected__', '__autofill__', '__extension__',
+                'RDM', 'rdm', 'secureAutofill', 'SECRET_KEY',
+                'secureBridge', 'rdmBridge', 'hostBridge'
+            ];
+            
+            const detected = [];
+            for (const name of suspiciousNames) {
+                if (window[name] !== undefined) {
+                    detected.push(name);
+                    addLog(`⚠️ Found global variable: ${name}`, 'warning');
+                }
+            }
+            
+            if (detected.length > 0) {
+                addTestResult(
+                    'Global Variables',
+                    false,
+                    `Found ${detected.length} suspicious global(s): ${detected.join(', ')}`
+                );
+            } else {
+                addTestResult(
+                    'Global Variables',
+                    true,
+                    'No suspicious global variables detected'
+                );
+            }
+        }
+        
+        // TEST 2: Property Additions
+        function testPropertyAdditions() {
+            addLog('Running: Property Addition Monitoring', 'info');
+            
+            const originalKeys = new Set(Object.keys(window));
+            
+            setTimeout(() => {
+                const currentKeys = new Set(Object.keys(window));
+                const newKeys = [...currentKeys].filter(k => !originalKeys.has(k));
+                
+                const suspiciousKeys = newKeys.filter(k => 
+                    !k.startsWith('webkit') && 
+                    !k.startsWith('on') &&
+                    k !== 'chrome'
+                );
+                
+                if (suspiciousKeys.length > 0) {
+                    addLog(`Found ${suspiciousKeys.length} new properties: ${suspiciousKeys.join(', ')}`, 'warning');
+                    addTestResult(
+                        'Property Additions',
+                        false,
+                        `New properties detected: ${suspiciousKeys.join(', ')}`
+                    );
+                } else {
+                    addTestResult(
+                        'Property Additions',
+                        true,
+                        'No suspicious new properties detected'
+                    );
+                }
+            }, 1000);
+        }
+        
+        // TEST 3: DOM Mutations
+        function testDOMMutations() {
+            addLog('Running: DOM Mutation Monitoring', 'info');
+            
+            const detectedScripts = [];
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.tagName === 'SCRIPT') {
+                            const src = node.src || 'inline script';
+                            detectedScripts.push(src);
+                            addLog(`⚠️ Script injection detected: ${src}`, 'warning');
+                        }
+                    });
+                });
+            });
+            
+            observer.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+            
+            setTimeout(() => {
+                if (detectedScripts.length > 0) {
+                    addTestResult(
+                        'DOM Mutations',
+                        false,
+                        `Detected ${detectedScripts.length} script injection(s)`
+                    );
+                } else {
+                    addTestResult(
+                        'DOM Mutations',
+                        true,
+                        'No suspicious DOM mutations detected'
+                    );
+                }
+            }, 2000);
+        }
+        
+        // TEST 4: Function Overrides
+        function testFunctionOverrides() {
+            addLog('Running: Native Function Override Detection', 'info');
+            
+            const natives = {
+                'document.getElementById': document.getElementById,
+                'document.querySelector': document.querySelector,
+                'Element.prototype.setAttribute': Element.prototype.setAttribute
+            };
+            
+            const originalToString = Function.prototype.toString;
+            const detected = [];
+            
+            for (const [name, func] of Object.entries(natives)) {
+                const funcString = originalToString.call(func);
+                if (!funcString.includes('[native code]')) {
+                    detected.push(name);
+                    addLog(`⚠️ Overridden function: ${name}`, 'warning');
+                }
+            }
+            
+            if (detected.length > 0) {
+                addTestResult(
+                    'Function Overrides',
+                    false,
+                    `Detected ${detected.length} overridden native function(s): ${detected.join(', ')}`
+                );
+            } else {
+                addTestResult(
+                    'Function Overrides',
+                    true,
+                    'No overridden native functions detected'
+                );
+            }
+        }
+        
+        // TEST 5: Input Monitoring
+        function testInputMonitoring() {
+            addLog('Running: Input Field Change Monitoring', 'info');
+            
+            const inputs = document.querySelectorAll('input');
+            const detectedChanges = [];
+            
+            inputs.forEach(input => {
+                let lastValue = input.value;
+                
+                const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+                Object.defineProperty(input, 'value', {
+                    get() {
+                        return descriptor.get.call(this);
+                    },
+                    set(newValue) {
+                        if (newValue !== lastValue && newValue !== '') {
+                            addLog(`⚠️ Value change on ${input.name || input.id}: "${newValue}"`, 'warning');
+                            detectedChanges.push({
+                                field: input.name || input.id,
+                                value: newValue
+                            });
+                        }
+                        lastValue = newValue;
+                        return descriptor.set.call(this, newValue);
+                    }
+                });
+            });
+            
+            setTimeout(() => {
+                if (detectedChanges.length > 0) {
+                    addTestResult(
+                        'Input Monitoring',
+                        false,
+                        `Detected ${detectedChanges.length} field(s) filled. Values are VISIBLE to website JavaScript!`
+                    );
+                } else {
+                    addTestResult(
+                        'Input Monitoring',
+                        true,
+                        'No programmatic field changes detected (or values set in isolated context)'
+                    );
+                }
+            }, 3000);
+        }
+        
+        // TEST 6: WebView2 Object Detection
+        function testWebViewObject() {
+            addLog('Running: WebView2 Object Detection', 'info');
+            
+            if (window.chrome && window.chrome.webview) {
+                addLog('⚠️ chrome.webview object detected', 'warning');
+                
+                const detected = [];
+                if (window.chrome.webview.hostObjects) {
+                    addLog('⚠️ chrome.webview.hostObjects accessible', 'warning');
+                    
+                    try {
+                        const keys = Object.keys(window.chrome.webview.hostObjects);
+                        if (keys.length > 0) {
+                            detected.push(...keys);
+                            addLog(`⚠️ Host objects enumerable: ${keys.join(', ')}`, 'warning');
+                        }
+                    } catch (e) {
+                        addLog('Host objects not enumerable (expected)', 'info');
+                    }
+                }
+                
+                addTestResult(
+                    'WebView2 Object',
+                    false,
+                    'WebView2 detected. Host objects ' + (detected.length > 0 ? 
+                        `EXPOSED: ${detected.join(', ')}` : 
+                        'not enumerable but may be accessible by name')
+                );
+            } else {
+                addTestResult(
+                    'WebView2 Object',
+                    true,
+                    'No WebView2 object detected'
+                );
+            }
+        }
+        
+        // TEST 7: Custom Events
+        function testCustomEvents() {
+            addLog('Running: Custom Event Monitoring', 'info');
+            
+            const detectedEvents = [];
+            const suspiciousEvents = [
+                'autofill', 'fill', 'credentialsFilled', 'passwordFilled',
+                'rdm-fill-ready', 'extension-ready', 'dataAvailable'
+            ];
+            
+            suspiciousEvents.forEach(eventName => {
+                window.addEventListener(eventName, (e) => {
+                    detectedEvents.push({
+                        event: eventName,
+                        detail: e.detail
+                    });
+                    addLog(`⚠️ Custom event detected: ${eventName}`, 'warning');
+                });
+            });
+            
+            setTimeout(() => {
+                if (detectedEvents.length > 0) {
+                    addTestResult(
+                        'Custom Events',
+                        false,
+                        `Detected ${detectedEvents.length} custom event(s): ` +
+                        detectedEvents.map(e => e.event).join(', ')
+                    );
+                } else {
+                    addTestResult(
+                        'Custom Events',
+                        true,
+                        'No suspicious custom events detected'
+                    );
+                }
+            }, 3000);
+        }
+        
+        // TEST 8: Known Bridge Access
+        function testKnownBridges() {
+            addLog('Running: Known Bridge Access Attempts', 'info');
+            
+            const knownBridgeNames = [
+                'rdmBridge', 'secureBridge', 'autofillBridge', 
+                'credentialBridge', 'hostBridge', 'bridge'
+            ];
+            
+            const detected = [];
+            
+            if (window.chrome && window.chrome.webview && window.chrome.webview.hostObjects) {
+                knownBridgeNames.forEach(name => {
+                    try {
+                        const obj = window.chrome.webview.hostObjects[name];
+                        if (obj) {
+                            detected.push(name);
+                            addLog(`🚨 CRITICAL: Accessible bridge found: ${name}`, 'critical');
+                            
+                            try {
+                                obj.GetCredentials('test_key');
+                                addLog(`🚨 Bridge ${name} is callable!`, 'critical');
+                            } catch (e) {
+                                addLog(`Bridge ${name} exists but method call failed: ${e.message}`, 'warning');
+                            }
+                        }
+                    } catch (e) {
+                        // Bridge doesn't exist
+                    }
+                });
+            }
+            
+            if (detected.length > 0) {
+                addTestResult(
+                    'Known Bridges',
+                    false,
+                    `⚠️ CRITICAL: Found accessible bridge(s): ${detected.join(', ')}`
+                );
+            } else {
+                addTestResult(
+                    'Known Bridges',
+                    true,
+                    'No known bridges accessible'
+                );
+            }
+        }
+        
+        // Run all general tests
+        function runAllGeneralTests() {
+            document.getElementById('generalResults').innerHTML = '';
+            generalPassCount = 0;
+            generalFailCount = 0;
+            
+            addLog('=== Starting General Detection Tests ===', 'info');
+            
+            testGlobalVariables();
+            testPropertyAdditions();
+            testDOMMutations();
+            testFunctionOverrides();
+            testInputMonitoring();
+            testWebViewObject();
+            testCustomEvents();
+            testKnownBridges();
+            
+            addLog('=== All tests initiated ===', 'info');
+        }
+        
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
+        
+        window.addEventListener('DOMContentLoaded', function() {
+            addLog('Page loaded - All monitoring systems active', 'success');
+            runAllGeneralTests();
+        });
+        
+        // Check after 30 seconds if no RDM event detected
         setTimeout(() => {
-            if (eventCount === 0) {
+            if (rdmEventCount === 0) {
+                const statusEl = document.getElementById('rdmStatus2');
                 statusEl.className = 'status secure';
-                statusEl.innerHTML = '✅ <strong>SECURE:</strong> No events intercepted yet (or RDM uses isolated world)';
-                addLog('No events detected after 30 seconds');
+                statusEl.innerHTML = '✅ <strong>SECURE:</strong> No rdmWebView2CustomMessage events intercepted';
+                addLog('No RDM events detected after 30 seconds - likely using isolated world or different mechanism', 'success');
+                updateSummary();
             }
         }, 30000);
-        
-        addLog('Event listener attached - ready to intercept');
     </script>
 </body>
 </html>
