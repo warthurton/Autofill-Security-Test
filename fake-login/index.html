@@ -331,6 +331,7 @@
             <input type="email" id="email" name="email" placeholder="Email" autocomplete="email">
             <button type="button" onclick="alert('Form would submit here')">Login</button>
             <button type="button" onclick="runAllGeneralTests()">Re-run Detection Tests</button>
+            <button type="button" onclick="runBridgeIntrospection()">🔍 Introspect Bridges</button>
         </div>
         
         <!-- Tabs -->
@@ -848,12 +849,8 @@
                             detected.push(name);
                             addLog(`🚨 CRITICAL: Accessible bridge found: ${name}`, 'critical');
                             
-                            try {
-                                obj.GetCredentials('test_key');
-                                addLog(`🚨 Bridge ${name} is callable!`, 'critical');
-                            } catch (e) {
-                                addLog(`Bridge ${name} exists but method call failed: ${e.message}`, 'warning');
-                            }
+                            // Perform introspection on this bridge
+                            introspectBridge(name, obj);
                         }
                     } catch (e) {
                         // Bridge doesn't exist
@@ -865,7 +862,7 @@
                 addTestResult(
                     'Known Bridges',
                     false,
-                    `⚠️ CRITICAL: Found accessible bridge(s): ${detected.join(', ')}`
+                    `⚠️ CRITICAL: Found accessible bridge(s): ${detected.join(', ')}. See introspection results below.`
                 );
             } else {
                 addTestResult(
@@ -874,6 +871,234 @@
                     'No known bridges accessible'
                 );
             }
+        }
+        
+        // NEW: Bridge Introspection
+        function introspectBridge(bridgeName, bridgeObj) {
+            addLog(`\n=== INTROSPECTING BRIDGE: ${bridgeName} ===`, 'critical');
+            
+            const discoveredMethods = [];
+            const discoveredProperties = [];
+            
+            // Technique 1: Try standard reflection (usually fails for COM objects)
+            addLog(`[${bridgeName}] Attempting standard reflection...`, 'info');
+            try {
+                const keys = Object.keys(bridgeObj);
+                if (keys.length > 0) {
+                    addLog(`[${bridgeName}] Object.keys: ${keys.join(', ')}`, 'critical');
+                    discoveredMethods.push(...keys);
+                }
+            } catch (e) {
+                addLog(`[${bridgeName}] Object.keys failed (expected for COM): ${e.message}`, 'info');
+            }
+            
+            try {
+                const names = Object.getOwnPropertyNames(bridgeObj);
+                if (names.length > 0) {
+                    addLog(`[${bridgeName}] getOwnPropertyNames: ${names.join(', ')}`, 'critical');
+                    discoveredMethods.push(...names);
+                }
+            } catch (e) {
+                addLog(`[${bridgeName}] getOwnPropertyNames failed`, 'info');
+            }
+            
+            // Technique 2: Check sync property (WebView2 specific)
+            addLog(`[${bridgeName}] Checking sync accessor...`, 'info');
+            try {
+                const syncObj = window.chrome.webview.hostObjects.sync[bridgeName];
+                if (syncObj) {
+                    addLog(`[${bridgeName}] Sync accessor available`, 'warning');
+                    const syncKeys = Object.keys(syncObj);
+                    if (syncKeys.length > 0) {
+                        addLog(`[${bridgeName}] Sync keys: ${syncKeys.join(', ')}`, 'critical');
+                        discoveredMethods.push(...syncKeys);
+                    }
+                }
+            } catch (e) {
+                addLog(`[${bridgeName}] Sync accessor check failed: ${e.message}`, 'info');
+            }
+            
+            // Technique 3: Try common method names
+            addLog(`[${bridgeName}] Probing common method names...`, 'info');
+            const commonMethods = [
+                // Credential-related
+                'GetCredentials', 'GetCredential', 'GetPassword', 'GetUsername',
+                'FetchCredentials', 'RetrieveCredentials', 'LoadCredentials',
+                'SetCredentials', 'SaveCredentials', 'StoreCredentials',
+                
+                // Registration
+                'Register', 'RegisterIsolatedWorld', 'RegisterClient',
+                'Initialize', 'Init', 'Setup',
+                
+                // Data access
+                'GetData', 'GetSensitiveData', 'GetSecureData',
+                'GetValue', 'GetField', 'GetProperty',
+                
+                // Status/reporting
+                'ReportStatus', 'ReportFillStatus', 'SendStatus',
+                'LogEvent', 'AuditLog', 'SendLog',
+                
+                // Communication
+                'SendMessage', 'SendSecureMessage', 'PostMessage',
+                'CallHost', 'InvokeHost', 'Execute',
+                
+                // Form filling
+                'FillForm', 'AutoFill', 'InjectData', 'PopulateForm',
+                'PrepareFill', 'PrepareFillOperation', 'QueueFill',
+                
+                // Generic
+                'Call', 'Invoke', 'Execute', 'Run', 'Process',
+                'Get', 'Set', 'Read', 'Write', 'Load', 'Save'
+            ];
+            
+            commonMethods.forEach(methodName => {
+                try {
+                    const method = bridgeObj[methodName];
+                    if (method !== undefined) {
+                        addLog(`[${bridgeName}] ✓ Method found: ${methodName}`, 'critical');
+                        discoveredMethods.push(methodName);
+                        
+                        // Try to get method signature through toString
+                        try {
+                            const methodStr = method.toString();
+                            if (methodStr && !methodStr.includes('[native code]')) {
+                                addLog(`[${bridgeName}]   Signature: ${methodStr}`, 'critical');
+                            }
+                        } catch (e) {
+                            // Can't get signature
+                        }
+                        
+                        // Try calling with various argument patterns to learn signature
+                        tryMethodSignatures(bridgeName, methodName, method);
+                    }
+                } catch (e) {
+                    // Method doesn't exist or not accessible
+                }
+            });
+            
+            // Technique 4: Try common properties
+            addLog(`[${bridgeName}] Probing common properties...`, 'info');
+            const commonProps = [
+                'version', 'name', 'id', 'type', 'status',
+                'isReady', 'isInitialized', 'isConnected',
+                'config', 'configuration', 'settings', 'options'
+            ];
+            
+            commonProps.forEach(propName => {
+                try {
+                    const value = bridgeObj[propName];
+                    if (value !== undefined) {
+                        addLog(`[${bridgeName}] ✓ Property found: ${propName} = ${JSON.stringify(value)}`, 'critical');
+                        discoveredProperties.push(propName);
+                    }
+                } catch (e) {
+                    // Property doesn't exist
+                }
+            });
+            
+            // Technique 5: Check for events/callbacks
+            addLog(`[${bridgeName}] Checking for event handlers...`, 'info');
+            const eventPatterns = ['on', 'add', 'remove', 'fire', 'emit', 'trigger'];
+            eventPatterns.forEach(pattern => {
+                try {
+                    const prop = bridgeObj[pattern + 'Event'];
+                    if (prop !== undefined) {
+                        addLog(`[${bridgeName}] ✓ Event handler: ${pattern}Event`, 'warning');
+                    }
+                } catch (e) {}
+            });
+            
+            // Summary
+            const uniqueMethods = [...new Set(discoveredMethods)];
+            const uniqueProps = [...new Set(discoveredProperties)];
+            
+            addLog(`\n[${bridgeName}] === DISCOVERY SUMMARY ===`, 'critical');
+            addLog(`[${bridgeName}] Found ${uniqueMethods.length} method(s): ${uniqueMethods.join(', ') || 'none'}`, 'critical');
+            addLog(`[${bridgeName}] Found ${uniqueProps.length} propert(y/ies): ${uniqueProps.join(', ') || 'none'}`, 'critical');
+            
+            // Try to create a visual summary in the results
+            createBridgeSummary(bridgeName, uniqueMethods, uniqueProps);
+        }
+        
+        function tryMethodSignatures(bridgeName, methodName, method) {
+            // Try various argument patterns to deduce method signature
+            const testPatterns = [
+                { args: [], desc: 'no args' },
+                { args: ['test'], desc: '1 string arg' },
+                { args: ['test', 'test2'], desc: '2 string args' },
+                { args: [{}], desc: '1 object arg' },
+                { args: [0], desc: '1 number arg' },
+                { args: [true], desc: '1 boolean arg' }
+            ];
+            
+            let successPattern = null;
+            
+            for (const pattern of testPatterns) {
+                try {
+                    // Try calling the method
+                    method(...pattern.args);
+                    successPattern = pattern.desc;
+                    addLog(`[${bridgeName}]   ${methodName}(${pattern.desc}) - executed without error`, 'warning');
+                    break; // Don't try more if one succeeds
+                } catch (e) {
+                    // Analyze error message for clues about signature
+                    const errorMsg = e.message || e.toString();
+                    
+                    // Look for parameter count hints
+                    if (errorMsg.includes('parameter') || errorMsg.includes('argument')) {
+                        addLog(`[${bridgeName}]   ${methodName}(${pattern.desc}) - ${errorMsg}`, 'info');
+                    } else if (errorMsg.includes('type')) {
+                        addLog(`[${bridgeName}]   ${methodName}(${pattern.desc}) - type mismatch: ${errorMsg}`, 'info');
+                    }
+                    
+                    // Common error patterns that reveal info
+                    if (errorMsg.includes('expects') || errorMsg.includes('required')) {
+                        addLog(`[${bridgeName}]   HINT: ${errorMsg}`, 'warning');
+                    }
+                }
+            }
+        }
+        
+        function createBridgeSummary(bridgeName, methods, properties) {
+            const resultsDiv = document.getElementById('generalResults');
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'test-result fail';
+            summaryDiv.style.marginTop = '20px';
+            
+            let html = `
+                <strong>🔍 BRIDGE INTROSPECTION: ${bridgeName}</strong>
+                <div style="margin-top: 10px; font-family: 'Courier New', monospace; font-size: 13px;">
+            `;
+            
+            if (methods.length > 0) {
+                html += `<strong>Exposed Methods (${methods.length}):</strong><br>`;
+                methods.forEach(m => {
+                    html += `• <code>${m}()</code><br>`;
+                });
+                html += '<br>';
+            }
+            
+            if (properties.length > 0) {
+                html += `<strong>Exposed Properties (${properties.length}):</strong><br>`;
+                properties.forEach(p => {
+                    html += `• <code>${p}</code><br>`;
+                });
+                html += '<br>';
+            }
+            
+            if (methods.length === 0 && properties.length === 0) {
+                html += '<em>No methods or properties could be enumerated, but bridge is still accessible.</em><br>';
+            }
+            
+            html += `
+                <br>
+                <strong style="color: #dc3545;">⚠️ SECURITY RISK:</strong> This bridge is accessible to website JavaScript.
+                Any discovered methods can potentially be called by malicious scripts.
+            </div>
+            `;
+            
+            summaryDiv.innerHTML = html;
+            resultsDiv.appendChild(summaryDiv);
         }
         
         // Run all general tests
@@ -894,6 +1119,55 @@
             testKnownBridges();
             
             addLog('=== All tests initiated ===', 'info');
+        }
+        
+        // Run bridge introspection manually
+        function runBridgeIntrospection() {
+            addLog('\n=== MANUAL BRIDGE INTROSPECTION STARTED ===', 'critical');
+            
+            if (!window.chrome || !window.chrome.webview || !window.chrome.webview.hostObjects) {
+                addLog('❌ No WebView2 hostObjects available', 'warning');
+                alert('No WebView2 hostObjects detected. This only works in WebView2 environments.');
+                return;
+            }
+            
+            // Try all known bridge names plus user input
+            const bridgeNames = [
+                'rdmBridge', 'secureBridge', 'autofillBridge', 
+                'credentialBridge', 'hostBridge', 'bridge'
+            ];
+            
+            let foundAny = false;
+            bridgeNames.forEach(name => {
+                try {
+                    const obj = window.chrome.webview.hostObjects[name];
+                    if (obj) {
+                        foundAny = true;
+                        introspectBridge(name, obj);
+                    }
+                } catch (e) {
+                    // Bridge doesn't exist
+                }
+            });
+            
+            if (!foundAny) {
+                addLog('⚠️ No known bridges found. Try entering a custom bridge name.', 'warning');
+                const customName = prompt('Enter a custom bridge name to introspect:');
+                if (customName) {
+                    try {
+                        const obj = window.chrome.webview.hostObjects[customName];
+                        if (obj) {
+                            introspectBridge(customName, obj);
+                        } else {
+                            addLog(`❌ Bridge "${customName}" not found`, 'warning');
+                        }
+                    } catch (e) {
+                        addLog(`❌ Error accessing bridge "${customName}": ${e.message}`, 'warning');
+                    }
+                }
+            }
+            
+            addLog('=== MANUAL BRIDGE INTROSPECTION COMPLETE ===\n', 'success');
         }
         
         // ============================================================
